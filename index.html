@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TimeSync AI</title>
-    <!-- Tailwind via CDN is fine for simple setup, though PostCSS is better for prod. Keeping for simplicity. -->
+    <!-- Tailwind via CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -26,6 +26,18 @@
         background: #94a3b8;
       }
     </style>
+    <!-- Error Handler for debugging white screens on deployment -->
+    <script>
+      window.addEventListener('error', function(event) {
+        const root = document.getElementById('root');
+        if (root && root.innerHTML.trim() === '') {
+          const errorDiv = document.createElement('div');
+          errorDiv.style.cssText = 'position:fixed; top:0; left:0; width:100%; padding:20px; background:white; color:red; z-index:9999; font-family:monospace; border-bottom: 2px solid red;';
+          errorDiv.textContent = 'Application Error: ' + event.message;
+          document.body.appendChild(errorDiv);
+        }
+      });
+    </script>
   <script type="importmap">
 {
   "imports": {
@@ -44,6 +56,7 @@
 </head>
   <body class="bg-slate-50 text-slate-900 antialiased">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+    <script type="module" src="./index.tsx"></script>
+  <script type="module" src="/index.tsx"></script>
+</body>
 </html>

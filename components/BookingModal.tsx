@@ -16,6 +16,14 @@ export interface BookingModalProps {
   existingAppointment?: Appointment | null; // Passed if clicking an existing slot (e.g., to book an available one)
 }
 
+// Simple ID generator fallback for broader compatibility
+const generateId = () => {
+  if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+};
+
 export const BookingModal: React.FC<BookingModalProps> = ({ 
   isOpen, 
   onClose, 
@@ -104,7 +112,7 @@ export const BookingModal: React.FC<BookingModalProps> = ({
     }
 
     const appointment: Appointment = {
-      id: existingAppointment ? existingAppointment.id : crypto.randomUUID(),
+      id: existingAppointment ? existingAppointment.id : generateId(),
       title,
       start: startDateTime,
       end: endDateTime,
