@@ -1,20 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { format, addDays, isSameDay, addMinutes, getDay, startOfWeek } from 'date-fns';
+import { format, addDays, isSameDay, startOfWeek } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Clock, Trash2, CheckCircle2 } from 'lucide-react';
 
-import { Appointment, GeminiBookingSuggestion } from './types';
+import { Appointment } from './types';
 import { getAppointments, deleteAppointment } from './services/storageService';
 import { WORKING_HOURS, MOCK_OWNER } from './constants';
 import { Button } from './components/Button';
-import { BookingModal, BookingModalProps } from './components/BookingModal';
-import { AIScheduler } from './components/AIScheduler';
+import { BookingModal } from './components/BookingModal';
 
 const App: React.FC = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState<{date: Date, time: string, appointment?: Appointment} | null>(null);
-  const [suggestionData, setSuggestionData] = useState<Partial<BookingModalProps>>({});
 
   // Simulating user role (toggle in UI for demo)
   const [currentUserRole, setCurrentUserRole] = useState<'owner' | 'colleague'>('colleague');
@@ -59,7 +57,6 @@ const App: React.FC = () => {
         if (existingApt.type === 'availability') {
             // Both Owner (to edit) and Colleague (to book) can click 'availability'
             setSelectedSlot({ date, time, appointment: existingApt });
-            setSuggestionData({});
             setIsModalOpen(true);
         } else {
              // It's a meeting. Only owner might want to see details (not implemented in modal yet) or delete
@@ -79,53 +76,7 @@ const App: React.FC = () => {
 
     // Owner creating new availability
     setSelectedSlot({ date, time });
-    setSuggestionData({}); // Clear AI suggestions
     setIsModalOpen(true);
-  };
-
-  const handleAISuggestion = (suggestion: GeminiBookingSuggestion) => {
-    if (suggestion.date && suggestion.startTime) {
-        const [year, month, day] = suggestion.date.split('-').map(Number);
-        const suggestedDate = new Date(year, month - 1, day);
-        
-        // Check if there is an availability slot at this time if user is colleague
-        const [hours, minutes] = suggestion.startTime.split(':').map(Number);
-        const suggestedDateTime = new Date(suggestedDate);
-        suggestedDateTime.setHours(hours, minutes, 0, 0);
-        
-        let targetApt: Appointment | undefined;
-
-        if (currentUserRole === 'colleague') {
-            targetApt = appointments.find(apt => 
-                apt.type === 'availability' &&
-                isSameDay(apt.start, suggestedDate) &&
-                format(apt.start, 'HH:mm') === suggestion.startTime
-            );
-
-            if (!targetApt) {
-                alert(`Sorry, there is no open slot available at ${suggestion.startTime} on ${suggestion.date}. Please ask the owner to open this time.`);
-                return;
-            }
-        }
-
-        // Navigate calendar to that week
-        setCurrentDate(suggestedDate);
-
-        // Pre-fill modal
-        setSelectedSlot({ 
-            date: suggestedDate, 
-            time: suggestion.startTime, 
-            appointment: targetApt // If colleague, this sets the booking context
-        });
-
-        setSuggestionData({
-            initialDate: suggestedDate,
-            initialTime: suggestion.startTime,
-            initialTitle: suggestion.title,
-            initialDuration: suggestion.durationMinutes
-        });
-        setIsModalOpen(true);
-    }
   };
 
   const handleDelete = (id: string, e: React.MouseEvent) => {
@@ -239,7 +190,7 @@ const App: React.FC = () => {
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center text-white font-bold">
                     TS
                 </div>
-                <h1 className="text-xl font-bold text-slate-900 hidden sm:block">TimeSync AI</h1>
+                <h1 className="text-xl font-bold text-slate-900 hidden sm:block">TimeSync</h1>
             </div>
             
             <div className="flex items-center gap-4">
@@ -273,7 +224,7 @@ const App: React.FC = () => {
         
         {/* Header Controls */}
         <div className="mb-8">
-            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                 <div>
                     <h2 className="text-3xl font-bold text-slate-900 mb-2">
                         {format(currentDate, 'MMMM yyyy')}
@@ -296,9 +247,6 @@ const App: React.FC = () => {
                     </Button>
                 </div>
             </div>
-
-            {/* AI Scheduler */}
-            <AIScheduler onSuggestion={handleAISuggestion} />
         </div>
 
         {/* Legend */}
@@ -382,10 +330,8 @@ const App: React.FC = () => {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
         onSuccess={refreshAppointments}
-        initialDate={selectedSlot?.date || suggestionData.initialDate}
-        initialTime={selectedSlot?.time || suggestionData.initialTime}
-        initialTitle={suggestionData.initialTitle}
-        initialDuration={suggestionData.initialDuration}
+        initialDate={selectedSlot?.date}
+        initialTime={selectedSlot?.time}
         currentUserRole={currentUserRole}
         existingAppointment={selectedSlot?.appointment}
       />
@@ -393,7 +339,7 @@ const App: React.FC = () => {
       {/* Footer */}
       <footer className="bg-white border-t border-slate-200 mt-auto py-6">
           <div className="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
-              <p>&copy; {new Date().getFullYear()} TimeSync AI. All rights reserved.</p>
+              <p>&copy; {new Date().getFullYear()} TimeSync. All rights reserved.</p>
               <p className="mt-1 text-xs">Simulated backend using LocalStorage.</p>
           </div>
       </footer>

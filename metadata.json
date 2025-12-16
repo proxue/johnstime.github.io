@@ -1,5 +1,5 @@
 {
-  "name": "John's TimeSync AI",
-  "description": "A smart calendar application allowing colleagues to view availability and book time slots (minimum 30 minutes). Features AI-assisted scheduling using Gemini to parse natural language booking requests.",
+  "name": "John's TimeSync",
+  "description": "A smart calendar application allowing colleagues to view availability and book time slots (minimum 30 minutes).",
   "requestFramePermissions": []
 }
